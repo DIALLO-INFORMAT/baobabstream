@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baobab Stream - Admin</title>
+    <link rel="icon" type="image/png" href="logobs.png">
+    <style>
+        :root {
+            --primary-color: #e50914;
+            --background-color: #141414;
+            --card-background-color: #222;
+            --text-color: #fff;
+            --input-background: #333;
+            --input-border: #555;
+            --button-secondary-bg: #555;
+            --button-secondary-hover-bg: #666;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+        }
+        .admin-logo-img {
+            height: 40px;
+            margin-right: 10px;
+        }
+         .admin-header h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--card-background-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+       
+        .admin-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #2a2a2a;
+            border-radius: 6px;
+        }
+        .admin-section h2 {
+            color: var(--primary-color);
+            text-align: left;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #ccc;
+        }
+        .radio-group label { /* For inline radio labels */
+            display: inline-block;
+            margin-right: 15px;
+            margin-left: 5px;
+            font-weight: normal;
+        }
+        .radio-group input[type="radio"] {
+            margin-right: 3px;
+            vertical-align: middle;
+        }
+
+
+        input[type="text"],
+        input[type="url"],
+        input[type="number"],
+        textarea {
+            width: calc(100% - 24px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            background-color: var(--input-background);
+            color: var(--text-color);
+            font-size: 0.95em;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.3);
+        }
+
+        .form-field-group.hidden {
+            display: none;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 18px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+        button:hover { background-color: #f40612; }
+        button.secondary { background-color: var(--button-secondary-bg); }
+        button.secondary:hover { background-color: var(--button-secondary-hover-bg); }
+
+        #movieListTable, #liveStreamListTable { /* Apply to both tables */
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #movieListTable th, #movieListTable td,
+        #liveStreamListTable th, #liveStreamListTable td {
+            border: 1px solid #444;
+            padding: 10px 8px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+        #movieListTable th, #liveStreamListTable th {
+            background-color: #333;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        #movieListTable img, #liveStreamListTable img {
+            max-width: 40px;
+            height: auto;
+            border-radius: 3px;
+            display: block;
+        }
+        #movieListTable td .actions button,
+        #liveStreamListTable td .actions button {
+            padding: 5px 8px;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            margin-right: 5px;
+            min-width: 60px;
+        }
+
+        .modal { /* Common modal styles */
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7);
+        }
+        .modal-content {
+            background-color: var(--card-background-color); margin: 8% auto; padding: 25px;
+            border: 1px solid #555; width: 90%; max-width: 650px; border-radius: 8px; position: relative;
+        }
+        .modal-content h2 { margin-top: 0; text-align: center; color: var(--primary-color); }
+        .close-button {
+            color: #aaa; position: absolute; top: 10px; right: 15px;
+            font-size: 28px; font-weight: bold; cursor: pointer;
+        }
+        .close-button:hover { color: var(--text-color); }
+
+        .toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            padding: 10px 20px; border-radius: 5px; color: white;
+            font-size: 0.9em; z-index: 2000; opacity: 0; transition: opacity 0.5s ease-in-out;
+        }
+        .toast.show { opacity: 1; }
+        .toast.success { background-color: var(--success-color); }
+        .toast.error { background-color: var(--error-color); }
+        
+         footer {
+            text-align: center; padding: 20px; margin-top: 40px;
+            border-top: 1px solid #333; font-size: 0.9em; color: var(--text-muted-color);
+        }
+         footer a { color: var(--primary-color); text-decoration: none; }
+         footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <img src="logobs.png" alt="Baobab Stream Logo" class="admin-logo-img">
+        <h1>Baobab Stream - Administration</h1>
+    </div>
+
+    <div class="container">
+        <div id="addMediaSection" class="admin-section">
+            <h2>Ajouter un Nouveau Média</h2>
+            <form id="addMediaForm">
+                <div class="radio-group" style="margin-bottom: 20px;">
+                    <label>Type de Média :</label>
+                    <input type="radio" name="mediaType" value="movie" id="typeMovie" checked> <label for="typeMovie">Film/Série</label>
+                    <input type="radio" name="mediaType" value="live" id="typeLive"> <label for="typeLive">Direct</label>
+                </div>
+
+                <label for="mediaTitle">Titre :</label>
+                <input type="text" id="mediaTitle" required>
+
+                <label for="mediaPosterUrl">URL de l'Affiche/Logo :</label>
+                <input type="url" id="mediaPosterUrl" required>
+
+                <label for="mediaStreamUrl">URL de Streaming :</label>
+                <input type="url" id="mediaStreamUrl" required>
+
+                <div class="form-field-group" id="movieSeriesFields">
+                    <label for="mediaGenre">Genre(s) (séparés par des virgules) :</label>
+                    <input type="text" id="mediaGenre" placeholder="Ex: Action, Comédie, Drame">
+
+                    <label for="mediaYear">Année de Sortie :</label>
+                    <input type="number" id="mediaYear" placeholder="Ex: 2023" min="1900" max="2099">
+                    
+                    <label for="mediaActors">Acteurs (séparés par des virgules) :</label>
+                    <input type="text" id="mediaActors" placeholder="Ex: Acteur 1, Actrice 2">
+                    
+                    <label for="mediaDescription">Description/Synopsis :</label>
+                    <textarea id="mediaDescription" placeholder="Brève description du film/série..."></textarea>
+                </div>
+                
+                <div class="form-field-group hidden" id="liveStreamFields">
+                     <label for="liveCategory">Catégorie (pour Direct) :</label>
+                     <input type="text" id="liveCategory" placeholder="Ex: Actualités, Sport, Divertissement">
+                </div>
+
+
+                <button type="submit">Publier le Média</button>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <h2>Gérer les Films/Séries</h2>
+            <input type="text" id="adminMovieSearchInput" placeholder="Rechercher un film/série..." style="width: calc(100% - 22px); margin-bottom:15px;">
+            <table id="movieListTable">
+                <thead>
+                    <tr>
+                        <th>Affiche</th>
+                        <th>Titre</th>
+                        <th>Genre</th>
+                        <th>Année</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="movieListBody"></tbody>
+            </table>
+        </div>
+
+        <div class="admin-section">
+            <h2>Gérer les Directs</h2>
+            <input type="text" id="adminLiveSearchInput" placeholder="Rechercher un direct..." style="width: calc(100% - 22px); margin-bottom:15px;">
+            <table id="liveStreamListTable">
+                <thead>
+                    <tr>
+                        <th>Logo</th>
+                        <th>Titre</th>
+                        <th>Catégorie</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="liveStreamListBody"></tbody>
+            </table>
+        </div>
+
+         <footer>
+             &copy; <span id="currentYearAdmin"></span> <a href="https://youtube.com/@dialloacademy" target="_blank" rel="noopener noreferrer">Baobab Stream</a>. Tous droits réservés.
+        </footer>
+    </div>
+
+    <!-- Edit Modal (Generic for both, will adapt based on what's being edited) -->
+    <div id="editMediaModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeEditModal">&times;</span>
+            <h2 id="editModalTitle">Modifier le Média</h2>
+            <form id="editMediaForm">
+                <input type="hidden" id="editMediaId">
+                <input type="hidden" id="editMediaType"> {/* To know if it's a movie or live */}
+                
+                <label for="editMediaTitle_form">Titre :</label>
+                <input type="text" id="editMediaTitle_form" required>
+
+                <label for="editMediaPosterUrl_form">URL de l'Affiche/Logo :</label>
+                <input type="url" id="editMediaPosterUrl_form" required>
+
+                <label for="editMediaStreamUrl_form">URL de Streaming :</label>
+                <input type="url" id="editMediaStreamUrl_form" required>
+
+                <div class="form-field-group" id="editMovieSeriesFields_form">
+                    <label for="editMediaGenre_form">Genre(s) :</label>
+                    <input type="text" id="editMediaGenre_form">
+
+                    <label for="editMediaYear_form">Année de Sortie :</label>
+                    <input type="number" id="editMediaYear_form" min="1900" max="2099">
+
+                    <label for="editMediaActors_form">Acteurs :</label>
+                    <input type="text" id="editMediaActors_form">
+
+                    <label for="editMediaDescription_form">Description/Synopsis :</label>
+                    <textarea id="editMediaDescription_form"></textarea>
+                </div>
+
+                <div class="form-field-group hidden" id="editLiveStreamFields_form">
+                    <label for="editLiveCategory_form">Catégorie (pour Direct) :</label>
+                    <input type="text" id="editLiveCategory_form">
+                </div>
+
+                <button type="submit">Sauvegarder</button>
+                <button type="button" class="secondary" id="cancelEdit">Annuler</button>
+            </form>
+        </div>
+    </div>
+    <div id="toastNotification" class="toast"></div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove, update, get, child, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = { /* VOTRE CONFIG FIREBASE ICI */
+            apiKey: "AIzaSyDsXKpuGIiUfFgEJAJxXpyE7bfcdgHS1OM",
+            authDomain: "baobabstream.firebaseapp.com",
+            databaseURL: "https://baobabstream-default-rtdb.firebaseio.com",
+            projectId: "baobabstream",
+            storageBucket: "baobabstream.appspot.com",
+            messagingSenderId: "396726583182",
+            appId: "1:396726583182:web:d895c222c4b3cd69ccaedf",
+            measurementId: "G-NRRQ7TC4GP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const moviesRef = ref(database, 'movies');
+        const liveStreamsRef = ref(database, 'live_streams'); // New ref for live streams
+
+        document.getElementById('currentYearAdmin').textContent = new Date().getFullYear();
+
+        const addMediaForm = document.getElementById('addMediaForm');
+        const movieListBody = document.getElementById('movieListBody');
+        const liveStreamListBody = document.getElementById('liveStreamListBody'); // For live streams table
+        const adminMovieSearchInput = document.getElementById('adminMovieSearchInput');
+        const adminLiveSearchInput = document.getElementById('adminLiveSearchInput');
+
+        // Form type selection
+        const mediaTypeRadios = document.querySelectorAll('input[name="mediaType"]');
+        const movieSeriesFields = document.getElementById('movieSeriesFields');
+        const liveStreamFields = document.getElementById('liveStreamFields');
+
+        mediaTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'movie') {
+                    movieSeriesFields.classList.remove('hidden');
+                    liveStreamFields.classList.add('hidden');
+                } else { // live
+                    movieSeriesFields.classList.add('hidden');
+                    liveStreamFields.classList.remove('hidden');
+                }
+            });
+        });
+
+        // Edit Modal Elements
+        const editMediaModal = document.getElementById('editMediaModal');
+        const editMediaForm = document.getElementById('editMediaForm');
+        const closeEditModalButton = document.getElementById('closeEditModal');
+        const cancelEditButton = document.getElementById('cancelEdit');
+        const editModalTitle = document.getElementById('editModalTitle');
+        
+        const editMediaIdInput = document.getElementById('editMediaId');
+        const editMediaTypeInput = document.getElementById('editMediaType'); // Hidden field for type
+        const editMediaTitleInput = document.getElementById('editMediaTitle_form');
+        const editMediaPosterUrlInput = document.getElementById('editMediaPosterUrl_form');
+        const editMediaStreamUrlInput = document.getElementById('editMediaStreamUrl_form');
+        
+        // Movie/Series specific edit fields
+        const editMovieSeriesFields_form = document.getElementById('editMovieSeriesFields_form');
+        const editMediaGenreInput = document.getElementById('editMediaGenre_form');
+        const editMediaYearInput = document.getElementById('editMediaYear_form');
+        const editMediaActorsInput = document.getElementById('editMediaActors_form');
+        const editMediaDescriptionInput = document.getElementById('editMediaDescription_form');
+
+        // Live stream specific edit fields
+        const editLiveStreamFields_form = document.getElementById('editLiveStreamFields_form');
+        const editLiveCategoryInput = document.getElementById('editLiveCategory_form');
+
+        const toastNotification = document.getElementById('toastNotification');
+
+        let allAdminMovies = []; 
+        let allAdminLiveStreams = [];
+
+        function showToast(message, type = 'success') {
+            toastNotification.textContent = message;
+            toastNotification.className = `toast ${type} show`;
+            setTimeout(() => { toastNotification.className = 'toast'; }, 3000);
+        }
+
+        addMediaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const selectedType = document.querySelector('input[name="mediaType"]:checked').value;
+            
+            const commonData = {
+                title: document.getElementById('mediaTitle').value,
+                posterUrl: document.getElementById('mediaPosterUrl').value,
+                streamUrl: document.getElementById('mediaStreamUrl').value,
+                createdAt: serverTimestamp()
+            };
+
+            let dataToPush;
+            let targetRef;
+
+            if (selectedType === 'movie') {
+                targetRef = moviesRef;
+                dataToPush = {
+                    ...commonData,
+                    genre: document.getElementById('mediaGenre').value,
+                    year: document.getElementById('mediaYear').value ? parseInt(document.getElementById('mediaYear').value) : null,
+                    actors: document.getElementById('mediaActors').value,
+                    description: document.getElementById('mediaDescription').value
+                };
+            } else { // live
+                targetRef = liveStreamsRef;
+                dataToPush = {
+                    ...commonData,
+                    category: document.getElementById('liveCategory').value
+                };
+            }
+
+            push(targetRef, dataToPush).then(() => {
+                showToast('Média ajouté avec succès !');
+                addMediaForm.reset();
+                // Reset radio to movie and show correct fields
+                document.getElementById('typeMovie').checked = true;
+                movieSeriesFields.classList.remove('hidden');
+                liveStreamFields.classList.add('hidden');
+            }).catch((error) => {
+                console.error("Erreur d'ajout: ", error);
+                showToast("Erreur lors de l'ajout.", 'error');
+            });
+        });
+
+        // --- MOVIE/SERIES MANAGEMENT ---
+        function renderAdminMovieList(moviesToDisplay) {
+            movieListBody.innerHTML = ''; 
+            if (moviesToDisplay.length === 0) {
+                movieListBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aucun film/série.</td></tr>';
+                return;
+            }
+            moviesToDisplay.forEach(movieItem => {
+                const { id, movie } = movieItem;
+                const row = movieListBody.insertRow();
+                row.innerHTML = `
+                    <td><img src="${movie.posterUrl}" alt="Affiche" onerror="this.onerror=null;this.src='https://via.placeholder.com/40x60?text=N/A';"></td>
+                    <td>${movie.title || 'N/A'}</td>
+                    <td>${movie.genre || 'N/A'}</td>
+                    <td>${movie.year || 'N/A'}</td>
+                    <td class="actions">
+                        <button class="edit-btn" data-id="${id}" data-type="movie">Modifier</button>
+                        <button class="delete-btn secondary" data-id="${id}" data-type="movie">Supprimer</button>
+                    </td>
+                `;
+            });
+            document.querySelectorAll('#movieListTable .edit-btn').forEach(button => button.addEventListener('click', handleEditMedia));
+            document.querySelectorAll('#movieListTable .delete-btn').forEach(button => button.addEventListener('click', handleDeleteMedia));
+        }
+
+        onValue(moviesRef, (snapshot) => {
+            allAdminMovies = [];
+            const moviesData = snapshot.val();
+            if (moviesData) {
+                Object.keys(moviesData).forEach(movieId => {
+                    allAdminMovies.push({ id: movieId, movie: moviesData[movieId] });
+                });
+                allAdminMovies.sort((a, b) => (b.movie.createdAt || 0) - (a.movie.createdAt || 0));
+            }
+            filterAdminMovies();
+        });
+
+        function filterAdminMovies() {
+            const searchTerm = adminMovieSearchInput.value.toLowerCase();
+            if (!searchTerm) {
+                renderAdminMovieList(allAdminMovies); return;
+            }
+            const filtered = allAdminMovies.filter(({ movie }) => 
+                (movie.title && movie.title.toLowerCase().includes(searchTerm)) ||
+                (movie.genre && movie.genre.toLowerCase().includes(searchTerm))
+            );
+            renderAdminMovieList(filtered);
+        }
+        adminMovieSearchInput.addEventListener('input', filterAdminMovies);
+
+        // --- LIVE STREAM MANAGEMENT ---
+        function renderAdminLiveStreamList(streamsToDisplay) {
+            liveStreamListBody.innerHTML = '';
+            if (streamsToDisplay.length === 0) {
+                liveStreamListBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun direct.</td></tr>';
+                return;
+            }
+            streamsToDisplay.forEach(streamItem => {
+                const { id, stream } = streamItem;
+                const row = liveStreamListBody.insertRow();
+                row.innerHTML = `
+                    <td><img src="${stream.posterUrl}" alt="Logo" onerror="this.onerror=null;this.src='https://via.placeholder.com/40x40?text=N/A';"></td>
+                    <td>${stream.title || 'N/A'}</td>
+                    <td>${stream.category || 'N/A'}</td>
+                    <td class="actions">
+                        <button class="edit-btn" data-id="${id}" data-type="live">Modifier</button>
+                        <button class="delete-btn secondary" data-id="${id}" data-type="live">Supprimer</button>
+                    </td>
+                `;
+            });
+            document.querySelectorAll('#liveStreamListTable .edit-btn').forEach(button => button.addEventListener('click', handleEditMedia));
+            document.querySelectorAll('#liveStreamListTable .delete-btn').forEach(button => button.addEventListener('click', handleDeleteMedia));
+        }
+
+        onValue(liveStreamsRef, (snapshot) => {
+            allAdminLiveStreams = [];
+            const liveData = snapshot.val();
+            if (liveData) {
+                Object.keys(liveData).forEach(streamId => {
+                    allAdminLiveStreams.push({ id: streamId, stream: liveData[streamId] });
+                });
+                allAdminLiveStreams.sort((a, b) => (b.stream.createdAt || 0) - (a.stream.createdAt || 0));
+            }
+            filterAdminLiveStreams();
+        });
+
+        function filterAdminLiveStreams() {
+            const searchTerm = adminLiveSearchInput.value.toLowerCase();
+            if (!searchTerm) {
+                renderAdminLiveStreamList(allAdminLiveStreams); return;
+            }
+            const filtered = allAdminLiveStreams.filter(({ stream }) => 
+                (stream.title && stream.title.toLowerCase().includes(searchTerm)) ||
+                (stream.category && stream.category.toLowerCase().includes(searchTerm))
+            );
+            renderAdminLiveStreamList(filtered);
+        }
+        adminLiveSearchInput.addEventListener('input', filterAdminLiveStreams);
+
+
+        // --- COMMON EDIT/DELETE LOGIC ---
+        function handleDeleteMedia(e) {
+            const mediaId = e.target.getAttribute('data-id');
+            const mediaType = e.target.getAttribute('data-type');
+            const targetRef = mediaType === 'movie' ? ref(database, `movies/${mediaId}`) : ref(database, `live_streams/${mediaId}`);
+            
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce média ?')) {
+                remove(targetRef)
+                .then(() => showToast('Média supprimé !'))
+                .catch(error => {
+                    console.error("Erreur de suppression: ", error);
+                    showToast("Erreur de suppression.", 'error');
+                });
+            }
+        }
+
+        function handleEditMedia(e) {
+            const mediaId = e.target.getAttribute('data-id');
+            const mediaType = e.target.getAttribute('data-type');
+            const targetRef = mediaType === 'movie' ? child(moviesRef, mediaId) : child(liveStreamsRef, mediaId);
+
+            get(targetRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const mediaData = snapshot.val();
+                    editMediaIdInput.value = mediaId;
+                    editMediaTypeInput.value = mediaType; // Store the type
+                    editMediaTitleInput.value = mediaData.title || '';
+                    editMediaPosterUrlInput.value = mediaData.posterUrl || '';
+                    editMediaStreamUrlInput.value = mediaData.streamUrl || '';
+                    
+                    if (mediaType === 'movie') {
+                        editModalTitle.textContent = "Modifier Film/Série";
+                        editMovieSeriesFields_form.classList.remove('hidden');
+                        editLiveStreamFields_form.classList.add('hidden');
+                        editMediaGenreInput.value = mediaData.genre || '';
+                        editMediaYearInput.value = mediaData.year || '';
+                        editMediaActorsInput.value = mediaData.actors || '';
+                        editMediaDescriptionInput.value = mediaData.description || '';
+                    } else { // live
+                        editModalTitle.textContent = "Modifier Direct";
+                        editMovieSeriesFields_form.classList.add('hidden');
+                        editLiveStreamFields_form.classList.remove('hidden');
+                        editLiveCategoryInput.value = mediaData.category || '';
+                    }
+                    editMediaModal.style.display = 'block';
+                } else {
+                    showToast("Média non trouvé.", 'error');
+                }
+            }).catch((error) => {
+                console.error("Erreur de récupération: ", error);
+                showToast("Erreur de récupération des détails.", 'error');
+            });
+        }
+
+        editMediaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const mediaId = editMediaIdInput.value;
+            const mediaType = editMediaTypeInput.value;
+            
+            let updatedData = {
+                title: editMediaTitleInput.value,
+                posterUrl: editMediaPosterUrlInput.value,
+                streamUrl: editMediaStreamUrlInput.value,
+                // createdAt is not updated, keep original
+            };
+            let targetRef;
+
+            if (mediaType === 'movie') {
+                targetRef = ref(database, `movies/${mediaId}`);
+                updatedData = {
+                    ...updatedData,
+                    genre: editMediaGenreInput.value,
+                    year: editMediaYearInput.value ? parseInt(editMediaYearInput.value) : null,
+                    actors: editMediaActorsInput.value,
+                    description: editMediaDescriptionInput.value
+                };
+            } else { // live
+                targetRef = ref(database, `live_streams/${mediaId}`);
+                updatedData = {
+                    ...updatedData,
+                    category: editLiveCategoryInput.value
+                };
+            }
+
+            update(targetRef, updatedData)
+            .then(() => {
+                showToast('Média mis à jour !');
+                closeEditModal();
+            })
+            .catch((error) => {
+                console.error("Erreur de MAJ: ", error);
+                showToast("Erreur de mise à jour.", 'error');
+            });
+        });
+        
+        function closeEditModal() {
+            editMediaModal.style.display = 'none';
+            editMediaForm.reset();
+        }
+        closeEditModalButton.onclick = closeEditModal;
+        cancelEditButton.onclick = closeEditModal;
+        window.onclick = function(event) {
+            if (event.target == editMediaModal) { closeEditModal(); }
+        }
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape" && editMediaModal.style.display === "block") { closeEditModal(); }
+        });
+    </script>
+</body>
+</html>
